@@ -8,6 +8,7 @@ from enum import Enum
 from typing import Any, Optional, Union
 import re
 import sys
+import os
 import textwrap
 from pathlib import Path
 from functools import cache
@@ -50,6 +51,9 @@ def get_github() -> tuple[Optional[tuple[str, str]], Optional[github.Github], Op
         github_login = (REPO_APPS_ROOT / ".github_login").open("r", encoding="utf-8").read().strip()
         github_token = (REPO_APPS_ROOT / ".github_token").open("r", encoding="utf-8").read().strip()
         github_email = (REPO_APPS_ROOT / ".github_email").open("r", encoding="utf-8").read().strip()
+
+        # Use github authentication for git actions
+        os.environ["GIT_ASKPASS"] = str(Path(__file__).parent / "askpass.py")
 
         auth = (github_login, github_token)
         github_api = github.Github(github_token)
@@ -100,6 +104,9 @@ class LocalAndRemoteRepo:
         # Mock the Git blob sha, to prevent a request to Github API
         manifest_blob = f"blob {len(self.manifest_raw)}\0{self.manifest_raw}"
         self.manifest_sha = hashlib.sha1(manifest_blob.encode("utf-8")).hexdigest()
+
+        # Get askpass into environ
+        get_github()
 
     def edit_manifest(self, content: str):
         self.manifest_raw = content
