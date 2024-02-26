@@ -113,6 +113,7 @@ class LocalAndRemoteRepo:
         self.manifest_path.open("w", encoding="utf-8").write(content)
 
     def connect_api(self) -> None:
+        # Defer call, to limit API calls
         github = get_github()[1]
         assert github, "Could not get github authentication!"
         path = Repo(self.app_path).remote("origin").url.split("github.com")[1].strip(":/")
@@ -147,6 +148,7 @@ class LocalAndRemoteRepo:
 
     def create_pr(self, branch: str, title: str, message: str) -> Optional[str]:
         # Determine base branch, either `testing` or default branch
+        self.connect_api()
         try:
             self.base_branch = self.github.get_branch("testing").name
         except Exception:
